@@ -168,7 +168,7 @@ class Annuity:
         # Change the bar mode
         fig.update_layout(
             title={
-                "text": "Annuity Loan P={}, r={}, m={}, n_pay={}".format(
+                "text": "Annuity Loan P={}, r={}, m={}, terms={}".format(
                     self.principal, self.interest, self.maturity, self.n_payments
                 ),
                 "xanchor": "center",
@@ -183,12 +183,14 @@ class Annuity:
         )
         fig.show()
 
+    @property
     def total_cost(self) -> float:
         """
         The total cost of the loan, which is the sum of all annuities
         """
         return self.table["Annuity"].sum()
 
+    @property
     def total_interest(self) -> float:
         """
         The total interest paid on the loan during the whole lifetime
