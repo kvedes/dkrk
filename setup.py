@@ -1,4 +1,4 @@
-from distutils.core import setup
+from distutils.core import setup, find_packages
 
 setup(
     name="dkrk",
@@ -6,6 +6,6 @@ setup(
     description="Calculations for Danish Real Estate Loans",
     author="Mathias Kvist Aarup",
     author_email="kvistanalytics@gmail.com",
-    packages=["distutils", "distutils.command"],
+    packages=find_packages(),
     install_requires=["numpy", "pandas", "plotly"],
 )
