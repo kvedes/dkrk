@@ -25,9 +25,7 @@ class Annuity:
         but payments are made each quarter.
     """
 
-    def __init__(
-        self, principal: float, interest: float, maturity: int, n_payments: int
-    ):
+    def __init__(self, principal: float, interest: float, maturity: int, n_terms: int):
         """
         Parameters
         ----------
@@ -37,7 +35,7 @@ class Annuity:
             The interest rate of the loan, as a decimal. E.g. 5% would be 0.05
         maturity : int
             The time to maturity. E.g. 30 for 30 years
-        n_payments : int
+        n_terms : int
             The number of payments made for each term. E.g. if the loan is for 30 years
             and payments are made each quarter, then n_paymens should 4. NB: It is not
             the total number of payments made during the lifetime of the annuity!
@@ -45,9 +43,9 @@ class Annuity:
         self.principal = principal
         self.interest = interest
         self.maturity = maturity
-        self.n_payments = n_payments
+        self.n_terms = n_terms
         self.table = Annuity.calc_annuity_table(
-            self.principal, self.interest, self.maturity, self.n_payments
+            self.principal, self.interest, self.maturity, self.n_terms
         )
 
     @staticmethod
@@ -70,11 +68,11 @@ class Annuity:
         """
         assert term > 0, "Cannot set term < 1"
         a1 = principal * interest / ((1 + interest) ** maturity - 1)
-        return a1 * (1 + interest) ** (t - 1)
+        return a1 * (1 + interest) ** (term - 1)
 
     @staticmethod
     def calc_annuity_table(
-        principal: float, interest: float, maturity: int, n_payments: int
+        principal: float, interest: float, maturity: int, n_terms: int
     ) -> pd.DataFrame:
         """
         Create an annuity table showing amortization, repayment and interest
@@ -88,7 +86,7 @@ class Annuity:
             The interest rate of the loan, as a decimal. E.g. 5% would be 0.05
         maturity : int
             The time to maturity. E.g. 30 for 30 years
-        n_payments : int
+        n_terms : int
             The number of payments made for each term. E.g. if the loan is for 30 years
             and payments are made each quarter, then n_paymens should 4. NB: It is not
             the total number of payments made during the lifetime of the annuity!
@@ -99,21 +97,21 @@ class Annuity:
             Table showing annuities and amortization
         """
         df = pd.DataFrame(
-            np.zeros((maturity * n_payments, 4)),
+            np.zeros((maturity * n_terms, 4)),
             columns=["Time", "Annuity", "Repayment", "Interest"],
         )
-        df["Time"] = np.arange(1, (maturity * n_payments) + 1)
+        df["Time"] = np.arange(1, (maturity * n_terms) + 1)
 
         df["Annuity"] = Annuity.calc_annuity(
-            principal, interest / n_payments, maturity * n_payments
+            principal, interest / n_terms, maturity * n_terms
         )
 
         df["Repayment"] = np.array(
             [
                 Annuity.repayment(
-                    principal, interest / n_payments, maturity * n_payments, term
+                    principal, interest / n_terms, maturity * n_terms, term
                 )
-                for term in range(1, (maturity * n_payments) + 1)
+                for term in range(1, (maturity * n_terms) + 1)
             ]
         )
         df["Debt"] = principal - df["Repayment"].cumsum()
@@ -128,8 +126,8 @@ class Annuity:
         """
         return self.annuity(
             self.principal,
-            self.interest / self.n_payments,
-            self.maturity * self.n_payments,
+            self.interest / self.n_terms,
+            self.maturity * self.n_terms,
         )
 
     @staticmethod
@@ -169,7 +167,7 @@ class Annuity:
         fig.update_layout(
             title={
                 "text": "Annuity Loan P={}, r={}, m={}, terms={}".format(
-                    self.principal, self.interest, self.maturity, self.n_payments
+                    self.principal, self.interest, self.maturity, self.n_terms
                 ),
                 "xanchor": "center",
                 "yanchor": "top",
