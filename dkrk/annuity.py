@@ -13,6 +13,16 @@ class Annuity:
     p*r*(1/(1-(1+r)**(-n)))
     where p is the loan principal, r is the interest rate as a decimal e.g. 5% is 0.05, and n
     is the time to maturity.
+
+    Nomenclature:
+    Principal: The total amount money loaned
+    Annuity: Denotes the total amount of money paid each month including repayment
+        of a part of the principal and interest
+    Repayment: The part of the principal which is paid back each term
+    Maturity: The time until the loan is fully paid back, given in some time unit
+    Term: The period of time between payments. There can be multiple
+        terms in period of time. E.g. a loan might have a maturity of 30 years
+        but payments are made each quarter.
     """
 
     def __init__(
@@ -65,8 +75,11 @@ class Annuity:
     @staticmethod
     def calc_annuity_table(
         principal: float, interest: float, maturity: int, n_payments: int
-    ):
+    ) -> pd.DataFrame:
         """
+        Create an annuity table showing amortization, repayment and interest
+        for each time period.
+
         Parameters
         ----------
         principal : float
@@ -91,7 +104,7 @@ class Annuity:
         )
         df["Time"] = np.arange(1, (maturity * n_payments) + 1)
 
-        df["Annuity"] = Annuity.annuity(
+        df["Annuity"] = Annuity.calc_annuity(
             principal, interest / n_payments, maturity * n_payments
         )
 
@@ -108,7 +121,11 @@ class Annuity:
 
         return df
 
-    def payment(self):
+    @property
+    def annuity(self) -> float:
+        """
+        Annuity which should be repaid each term.
+        """
         return self.annuity(
             self.principal,
             self.interest / self.n_payments,
@@ -116,10 +133,30 @@ class Annuity:
         )
 
     @staticmethod
-    def annuity(p, r, n):
-        return p * r * (1 / (1 - (1 + r) ** (-n)))
+    def calc_annuity(principal: float, interest: float, maturity: int) -> float:
+        """
+        Calculate the annuity which should be repaid each term.
+
+        Parameters
+        ----------
+        principal : float
+            The principal of the loan
+        interest : float
+            The interest rate of the loan, as a decimal. E.g. 5% would be 0.05
+        maturity : int
+            The time to maturity. E.g. 30 for 30 years
+
+        Returns
+        -------
+        float
+            Annuity
+        """
+        return principal * interest * (1 / (1 - (1 + interest) ** (-maturity)))
 
     def plot(self):
+        """
+        Create a plot visualizing the amortization of the loan
+        """
         fig = go.Figure(
             data=[
                 go.Bar(
@@ -146,8 +183,14 @@ class Annuity:
         )
         fig.show()
 
-    def total_cost(self):
+    def total_cost(self) -> float:
+        """
+        The total cost of the loan, which is the sum of all annuities
+        """
         return self.table["Annuity"].sum()
 
-    def total_interest(self):
+    def total_interest(self) -> float:
+        """
+        The total interest paid on the loan during the whole lifetime
+        """
         return self.table["Interest"].sum()
