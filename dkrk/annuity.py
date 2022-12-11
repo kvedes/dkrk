@@ -79,18 +79,31 @@ class Annuity:
             The number of payments made for each term. E.g. if the loan is for 30 years
             and payments are made each quarter, then n_paymens should 4. NB: It is not
             the total number of payments made during the lifetime of the annuity!
+
+        Returns
+        -------
+        pd.DataFrame
+            Table showing annuities and amortization
         """
         df = pd.DataFrame(
-            np.zeros((n * m, 4)), columns=["Time", "Annuity", "Repayment", "Interest"]
+            np.zeros((maturity * n_payments, 4)),
+            columns=["Time", "Annuity", "Repayment", "Interest"],
         )
-        df["Time"] = np.arange(1, (n * m) + 1)
+        df["Time"] = np.arange(1, (maturity * n_payments) + 1)
 
-        df["Annuity"] = Annuity.annuity(p, r / m, n * m)
+        df["Annuity"] = Annuity.annuity(
+            principal, interest / n_payments, maturity * n_payments
+        )
 
         df["Repayment"] = np.array(
-            [Annuity.repayment(p, r / m, n * m, z) for z in range(1, (n * m) + 1)]
+            [
+                Annuity.repayment(
+                    principal, interest / n_payments, maturity * n_payments, term
+                )
+                for term in range(1, (maturity * n_payments) + 1)
+            ]
         )
-        df["Debt"] = p - df["Repayment"].cumsum()
+        df["Debt"] = principal - df["Repayment"].cumsum()
         df["Interest"] = df["Annuity"] - df["Repayment"]
 
         return df
