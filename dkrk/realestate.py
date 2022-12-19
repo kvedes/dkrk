@@ -1,10 +1,38 @@
 """
 Module handling calculations related to Danish Real Estate Loans
 """
+from abc import ABC, abstractmethod
 from dkrk.annuity import Annuity
 import pandas as pd
 import numpy as np
 from numpy.polynomial.polynomial import polyroots
+import plotly_express as px
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
+
+class Term(ABC):
+    def __init__(self, start: datetime, end: datetime):
+        self.start = start
+        self.end = end
+
+    @abstractmethod
+    def next_term(self, **kwargs):
+        raise NotImplementedError()
+
+
+class Month(Term):
+    def next_term(self):
+        return Month(
+            self.start + relativedelta(months=1), self.end + relativedelta(months=1)
+        )
+
+
+class Quarter(Term):
+    def next_term(self):
+        return Month(
+            self.start + relativedelta(months=3), self.end + relativedelta(months=3)
+        )
 
 
 class TKLoan:
@@ -114,3 +142,57 @@ class TKLoan:
         The total interest paid on the loan during the whole lifetime
         """
         return self.table["Interest"].sum() + self.table["Bidrag"].sum()
+
+    def table_after_tax(self, tax_rate: float) -> pd.DataFrame:
+        """
+        Add a tax rebate to the interest payments.
+
+        Parameters
+        ----------
+        tax_rate : float
+            The tax rate rebate for interest payments in decimal.
+        """
+        after_tax = self.table.copy()
+        after_tax["Interest"] = after_tax["Interest"] * (1 - tax_rate)
+        after_tax["Bidrag"] = after_tax["Bidrag"] * (1 - tax_rate)
+        after_tax["Annuity"] = (
+            after_tax["Repayment"] + after_tax["Interest"] + after_tax["Bidrag"]
+        )
+        return after_tax
+
+
+class LoanPlotter:
+    def __init__(self, *args: TKLoan):
+        assert len(args) > 0, "No loans supplied!"
+        self.loans = args
+
+    def _concat_tables(self) -> pd.DataFrame:
+        concat_list = []
+        for loan in self.loans:
+            cur_df = loan.table.copy()
+            cur_df[
+                "Loan"
+            ] = f"{loan.interest*100:.2f}% {loan.maturity}Y {loan.bidrag*100:.2f}%"
+            concat_list.append(cur_df)
+        return pd.concat(concat_list)
+
+    def plot(self, attribute: str):
+        fig = px.line(
+            self._concat_tables(), x="Time", y=attribute, color="Loan", title=attribute
+        )
+        fig.show()
+
+    def plot_debt(self):
+        self.plot("Debt")
+
+    def plot_interest(self):
+        self.plot("Interest")
+
+    def plot_bidrag(self):
+        self.plot("Bidrag")
+
+    def plot_annuity(self):
+        self.plot("Annuity")
+
+    def plot_repayment(self):
+        self.plot("Repayment")
