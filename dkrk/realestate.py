@@ -6,7 +6,7 @@ from dkrk.annuity import Annuity
 import pandas as pd
 import numpy as np
 from numpy.polynomial.polynomial import polyroots
-import plotly_express as px
+import plotly.express as px
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -85,7 +85,7 @@ class TKLoan:
 
         # Cash flow
         self.cash_flow = [-self.face_value] + self.table["Annuity"].values.tolist()
-
+    
     @staticmethod
     def _add_bidrag(table: pd.DataFrame, bidrag: float, n_terms: int) -> pd.DataFrame:
         """

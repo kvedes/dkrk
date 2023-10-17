@@ -15,8 +15,8 @@ class Annuity:
     is the time to maturity.
 
     Nomenclature:
-    Principal: The total amount money loaned
-    Annuity: Denotes the total amount of money paid each month including repayment
+    Principal: The total amount of money loaned
+    Annuity: Denotes the total amount of money paid each term including repayment
         of a part of the principal and interest
     Repayment: The part of the principal which is paid back each term
     Maturity: The time until the loan is fully paid back, given in some time unit
